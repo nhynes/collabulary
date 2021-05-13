@@ -1,0 +1,12 @@
+{
+  "your_word": "Your word",
+  "their_word": "Their word",
+
+  "score": "Score",
+  "score_0": "Totally forgot",
+  "score_1": "Incorrect, but eventually remembered",
+  "score_2": "Incorrect, but quickly remembered",
+  "score_3": "Correct, but with significant difficulty",
+  "score_4": "Correct, with minor difficulty",
+  "score_5": "Perfect"
+}
