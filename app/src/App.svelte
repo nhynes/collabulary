@@ -1,71 +1,117 @@
 <script lang="ts">
-	import { _, locale } from './i18n';
+  import websocketStore from 'svelte-websocket-store';
 
-	import Round from './Round.svelte';
+  import Round from './Round.svelte';
+  import { _, locale } from './i18n';
 
-	let theirWord = {
-		word: '与',
-		wordDetail: 'yǔ',
-		definition: '(same as 欤, final particle expression doubt or surprise, similar to 吗 or 呢); and/to give/together with; take part in'.split(
-			'/',
-		),
-		side: 'definition',
-	};
+  let requestedLocale = window.location.hash.slice(1).startsWith('lang=')
+    ? window.location.hash.slice(6)
+    : undefined;
+  let userLocale = requestedLocale ?? locale;
 
-	let myWord = {
-		word: '你',
-		wordDetail: 'nǐ',
-		definition: 'you',
-		side: 'word',
-	};
+  let gameState;
+  try {
+    let wsUri = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${
+      window.location.host
+    }/${userLocale.toLowerCase()}`;
+    gameState = websocketStore(wsUri, {});
+  } catch (e) {
+    error = e.toString();
+    throw new Error(e);
+  }
+  console.log('connected as', userLocale);
 
-	let main;
-	let myNextWord = theirWord;
-	let theirNextWord = myWord;
-	let scrolling = false;
+  // gameState.subscribe(gs => {
+  //   console.log(gs);
+  // });
 
-	function waitForNextRound() {
-		setTimeout(() => {
-			scrolling = true;
-			setTimeout(() => {
-				myWord = myNextWord;
-				theirWord = theirNextWord;
-			}, 500);
-			setTimeout(() => {
-				myNextWord = undefined;
-				theirNextWord = undefined;
-				scrolling = false;
-			}, 1000);
-		}, 2500);
-	}
+  let main;
+
+  let scrolling = false;
+  let cards: { mine: Card; theirs: Card };
+  let nextCards: { mine: Card; theirs: Card };
+  let error: $gameState.error;
+  $: ready = $gameState.ready ?? false;
+  $: {
+    if ($gameState.myCard !== undefined) {
+      if (typeof cards === 'undefined') {
+        cards = {
+          mine: $gameState.myCard,
+          theirs: $gameState.theirCard,
+        };
+      } else if (cards?.mine?.word !== $gameState.myCard.word) {
+        nextCards = {
+          mine: $gameState.myCard,
+          theirs: $gameState.theirCard,
+        };
+        scrolling = true;
+        setTimeout(() => {
+          cards = nextCards;
+        }, 500);
+        setTimeout(() => {
+          nextCards = undefined;
+          scrolling = false;
+        }, 1000);
+      }
+    }
+  }
+
+  function advanceRound() {
+    ready = true;
+    gameState.set({ action: 'advance-round' });
+  }
+
+  function setScore({ detail: score }) {
+    gameState.set({ score });
+  }
 </script>
 
-<main bind:this={main} class:scrolling="{scrolling}">
-	{#key myWord}
-		<Round class="round" {myWord} {theirWord} on:nextRound={waitForNextRound} />
-	{/key}
-	{#if myNextWord && theirNextWord}
-		<Round class="round" myWord={myNextWord} theirWord={theirNextWord} />
-	{/if}
+<main bind:this={main} class:scrolling>
+  {#if error}
+    <div class="error">
+      <h1>Error: {error}</h1>
+    </div>
+  {:else}
+    {#if cards}
+      <Round
+        class="round"
+        myCard={cards.mine}
+        theirCard={cards.theirs}
+        hasReceivedScore={$gameState.hasScore ?? false}
+        scored={$gameState.scored}
+        {ready}
+        on:setScore={setScore}
+        on:advanceRound={advanceRound}
+      />
+    {/if}
+    {#if nextCards}
+      <Round class="round" myCard={nextCards.mine} theirCard={nextCards.theirs} />
+    {/if}
+  {/if}
 </main>
 
 <style>
-	main {
-		width: 200vw;
-		display: inline-block;
-	}
+  main {
+    width: 200vw;
+    display: inline-block;
+  }
 
-	main.scrolling {
-		transition: transform 1s;
-		transform: translateX(-100vw);
-	}
+  main.scrolling {
+    transition: transform 1s;
+    transform: translateX(-100vw);
+  }
 
-	:global(.scrolling *) {
-		transition: 0s !important;
-	}
+  .error {
+    width: 100vw;
+    text-align: center;
+  }
 
-	:global(.round) {
-		width: 100vw;
-		float: left;
-	}
+  :global(.scrolling *) {
+    transition: 0s !important;
+  }
+
+  :global(.round) {
+    width: 100vw;
+    float: left;
+  }
 </style>

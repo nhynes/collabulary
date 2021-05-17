@@ -9,8 +9,8 @@ addMessages('en-US', enUS);
 addMessages('zh-CN', zhCN);
 
 init({
-	fallbackLocale: 'en-US',
-	initialLocale: locale,
+  fallbackLocale: 'en-US',
+  initialLocale: locale,
 });
 
 export { _ } from 'svelte-i18n';

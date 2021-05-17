@@ -26,6 +26,7 @@
     "svelte-loading-spinners": "^0.1.4",
     "svelte-local-storage-store": "^0.1.6",
     "svelte-preprocess": "^4.0.0",
+    "svelte-websocket-store": "^1.1.4",
     "tslib": "^2.0.0",
     "typescript": "^4.0.0"
   },
