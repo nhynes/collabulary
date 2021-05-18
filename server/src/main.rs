@@ -9,8 +9,10 @@ mod vocab;
 async fn main() -> anyhow::Result<()> {
     init_tracing();
 
-    let vocab = vocab::Vocab::load_from_path("../vocab/chinese/vocab.tsv")?;
-    let game = game::Game::new(vocab);
+    let game = game::Game::new(vocab::Vocabs {
+        zh_en: vocab::Vocab::load_from_path("../vocab/chinese/vocab.tsv")?,
+        en_zh: vocab::Vocab::load_from_path("../vocab/english/vocab.tsv")?,
+    });
 
     warp::serve(server::filters(game))
         .bind(("0.0.0.0".parse::<std::net::IpAddr>().unwrap(), 1234))

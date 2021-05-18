@@ -133,6 +133,10 @@
     -webkit-backface-visibility: hidden;
   }
 
+  .card.scored {
+    user-select: none;
+  }
+
   .card-front {
     text-align: center;
   }

@@ -1,6 +1,12 @@
 use anyhow::Result;
 
 #[derive(Clone, Debug, Default)]
+pub struct Vocabs {
+    pub en_zh: Vocab,
+    pub zh_en: Vocab,
+}
+
+#[derive(Clone, Debug, Default)]
 pub struct Vocab(Vec<VocabWord>);
 
 impl Vocab {

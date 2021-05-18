@@ -5,10 +5,10 @@ use tokio::sync::{Mutex, RwLock};
 use tracing::debug;
 use warp::filters::ws::Message;
 
-use crate::vocab::Vocab;
+use crate::vocab::{Vocab, Vocabs};
 
 pub struct Game<S: Sink<Message> + Unpin> {
-    vocab: Vocab,
+    vocabs: Vocabs,
     state: RwLock<GameState>,
 
     /// The participant learning Chinese.
@@ -23,14 +23,14 @@ where
     S: Sink<Message> + Unpin,
     S::Error: std::error::Error + Send + Sync + 'static,
 {
-    pub fn new(vocab: Vocab) -> Self {
+    pub fn new(vocabs: Vocabs) -> Self {
         Self {
             state: RwLock::new(GameState {
-                round: Round::new_random(&vocab),
+                round: Round::new_random(&vocabs),
             }),
             en_participant: Mutex::new(None),
             zh_participant: Mutex::new(None),
-            vocab,
+            vocabs,
         }
     }
 
@@ -149,7 +149,7 @@ where
 
         if state.round.zh_ready && state.round.en_ready {
             debug!("starting new round");
-            Self::next_round(&mut state, &self.vocab)?;
+            Self::next_round(&mut state, &self.vocabs)?;
         }
 
         if let Some(p) = &mut *self.get_participant(locale).await {
@@ -162,8 +162,8 @@ where
         Ok(())
     }
 
-    fn next_round(state: &mut GameState, vocab: &Vocab) -> Result<()> {
-        state.round = Round::new_random(vocab);
+    fn next_round(state: &mut GameState, vocabs: &Vocabs) -> Result<()> {
+        state.round = Round::new_random(vocabs);
         Ok(())
     }
 }
@@ -195,10 +195,10 @@ struct Round {
 }
 
 impl Round {
-    fn new_random(vocab: &Vocab) -> Self {
+    fn new_random(vocabs: &Vocabs) -> Self {
         Self {
-            en_card: Card::random(vocab),
-            zh_card: Card::random(vocab),
+            en_card: Card::random(&vocabs.en_zh),
+            zh_card: Card::random(&vocabs.zh_en),
             ..Default::default()
         }
     }
