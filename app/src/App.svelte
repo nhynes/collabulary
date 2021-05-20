@@ -94,6 +94,8 @@
   main {
     width: 200vw;
     display: inline-block;
+
+    user-select: none;
   }
 
   main.scrolling {

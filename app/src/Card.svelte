@@ -133,8 +133,8 @@
     -webkit-backface-visibility: hidden;
   }
 
-  .card.scored {
-    user-select: none;
+  .card:not(.scored) {
+    user-select: initial;
   }
 
   .card-front {
